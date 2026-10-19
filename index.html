@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사회복지 바이브코딩 대시보드 (Supabase 연동)</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Geist:wght@400;500;600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'void-canvas': '#0a0a0a',
+                        'graphite': '#161616',
+                        'bone': '#ededed',
+                        'ash': '#c2c2c2',
+                        'slate': '#686868',
+                        'hairline': '#e5e5e5',
+                        'dusk-violet': '#6b62f2',
+                    },
+                    fontFamily: {
+                        'dm': ['"DM Sans"', 'sans-serif'],
+                        'geist': ['Geist', '"Noto Sans KR"', 'sans-serif'],
+                        'kr': ['"Noto Sans KR"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #ededed;
+            font-family: 'Geist', 'Noto Sans KR', sans-serif;
+            overflow-x: hidden;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(255,165,0,0.15) 0%, rgba(10,10,10,1) 50%, rgba(107,98,242,0.15) 100%);
+        }
+        .frosted-card {
+            background: rgba(212, 212, 212, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid #e5e5e5;
+        }
+        .hairline-border {
+            border: 1px solid #e5e5e5;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-white selection:text-black">
+
+    <!-- Top Status Banner & Auth Info -->
+    <div class="w-full py-2.5 px-6 bg-[#161616] border-b border-[#e5e5e5]/10 text-xs tracking-wide text-ash flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-dusk-violet animate-pulse"></span>
+            <span>사회복지 현장 맞춤형 바이브코딩 도구 디렉터리 v2.1 (Cloud DB)</span>
+        </div>
+        <div id="authBar" class="flex items-center gap-3">
+            <!-- Dynamic Auth Status -->
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="max-w-[1200px] w-full mx-auto px-6 py-12 flex-grow">
+
+        <!-- Hero Section with Live Welfare News Ticker on the Right -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-16">
+            
+            <!-- Hero Main Banner -->
+            <section class="hero-gradient rounded-[40px] p-8 md:p-12 relative overflow-hidden hairline-border flex flex-col items-center text-center lg:col-span-8 justify-center">
+                <div class="absolute -top-24 -right-24 w-96 h-96 bg-dusk-violet/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 hairline-border text-xs font-medium text-bone mb-6">
+                    <svg class="w-3.5 h-3.5 text-dusk-violet" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span>스마트한 복지 행정 솔루션</span>
+                </div>
+
+                <h1 class="font-dm font-medium text-3xl md:text-5xl tracking-tight text-bone mb-4 max-w-3xl leading-tight">
+                    사회복지 실무, 이제 스마트하게.
+                </h1>
+
+                <p class="text-ash text-sm md:text-base font-light max-w-xl mb-8 leading-relaxed font-kr">
+                    현장 실무의 효율성을 위해 힘써보겠습니다.
+                </p>
+
+                <!-- Search & Filter Bar Container -->
+                <div class="w-full max-w-xl flex flex-col sm:flex-row gap-3 bg-graphite p-2 rounded-[24px] hairline-border shadow-2xl">
+                    <div class="flex-grow flex items-center px-4 gap-3">
+                        <svg class="w-5 h-5 text-slate flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="text" id="searchInput" placeholder="필요한 도구 이름이나 기능을 검색하세요..." class="w-full bg-transparent text-bone placeholder-slate text-sm focus:outline-none py-2 font-kr">
+                    </div>
+                    <button onclick="handleSearch()" class="bg-white text-black hover:bg-bone font-medium px-5 py-2.5 rounded-full text-sm transition-all flex items-center justify-center gap-2 flex-shrink-0">
+                        <span>검색</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Real-time Welfare News Box (Right) -->
+            <aside class="bg-graphite rounded-[40px] p-6 hairline-border flex flex-col justify-between lg:col-span-4 shadow-xl">
+                <div>
+                    <div class="flex items-center justify-between mb-4 pb-3 border-b border-[#e5e5e5]/10">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                            <h3 class="font-geist font-semibold text-sm text-bone tracking-wide">실시간 복지 이슈 TOP 5</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-bone font-medium bg-white/10 px-2.5 py-1 rounded-full hairline-border">클라우드 동기화</span>
+                            <button id="newsManageBtn" onclick="openNewsAdminModal()" class="text-xs text-dusk-violet hover:underline hidden font-medium">관리</button>
+                        </div>
+                    </div>
+                    <ul id="liveNewsList" class="space-y-3 font-kr text-xs">
+                        <!-- Dynamic News Injection -->
+                    </ul>
+                </div>
+                <div class="mt-4 pt-3 border-t border-[#e5e5e5]/10 text-center">
+                    <span class="text-[11px] text-ash/60">클릭 시 뉴스 원문 페이지로 이동합니다.</span>
+                </div>
+            </aside>
+
+        </div>
+
+        <!-- Category Filter Tabs -->
+        <section class="mb-10">
+            <div id="categoryTabs" class="flex flex-wrap gap-2.5 justify-center md:justify-start items-center">
+                <button onclick="filterCategory('전체')" class="cat-btn px-5 py-2.5 rounded-full text-xs font-medium bg-white text-black transition-all">전체보기</button>
+                <button onclick="filterCategory('행정·서류 업무')" class="cat-btn px-5 py-2.5 rounded-full text-xs font-medium bg-graphite text-ash hover:text-bone hairline-border transition-all">행정·서류 업무</button>
+                <button onclick="filterCategory('회계 업무')" class="cat-btn px-5 py-2.5 rounded-full text-xs font-medium bg-graphite text-ash hover:text-bone hairline-border transition-all">회계 업무</button>
+                <button onclick="filterCategory('홍보 및 디자인')" class="cat-btn px-5 py-2.5 rounded-full text-xs font-medium bg-graphite text-ash hover:text-bone hairline-border transition-all">홍보 및 디자인</button>
+            </div>
+        </section>
+
+        <!-- Tool Cards Grid Section -->
+        <section class="mb-20">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                <h2 class="font-geist font-semibold text-2xl text-bone tracking-tight">등록된 실무 도구 목록</h2>
+                <div id="adminActionButtons" class="flex items-center gap-2 hidden">
+                    <button onclick="openAdminApprovalModal()" class="text-xs text-bone hover:text-white bg-dusk-violet/30 hairline-border px-4 py-2 rounded-full transition-all flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        <span>회원 가입 승인 관리</span>
+                    </button>
+                    <button onclick="openAdminModal()" class="text-xs text-bone hover:text-white bg-white/10 hairline-border px-4 py-2 rounded-full transition-all flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>도구 등록하기</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="toolsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamic Tools Injected Here -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full border-t border-[#e5e5e5]/10 py-10 bg-graphite text-center text-xs text-slate font-kr">
+        <div class="max-w-[1200px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p>© 2026 사회복지 바이브코딩 대시보드. All rights reserved.</p>
+            <p class="text-ash/60">본 플랫폼은 Supabase 클라우드 DB와 연동되어 안전하게 관리됩니다.</p>
+        </div>
+    </footer>
+
+    <!-- Tool Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-graphite hairline-border rounded-[32px] max-w-xl w-full p-8 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeDetailModal()" class="absolute top-6 right-6 text-ash hover:text-white p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <!-- Login Modal (자동 로그인 체크박스 추가) -->
+    <div id="loginModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-graphite hairline-border rounded-[32px] max-w-md w-full p-8 relative shadow-2xl">
+            <h3 class="font-geist font-semibold text-2xl text-bone mb-2">시스템 로그인</h3>
+            <p class="text-xs text-ash mb-6 font-kr">대시보드를 이용하려면 로그인을 진행해주세요.</p>
+            <div class="space-y-4 mb-4 font-kr">
+                <div>
+                    <label class="block text-xs text-ash mb-1">아이디</label>
+                    <input type="text" id="loginId" placeholder="아이디를 입력하세요" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-ash mb-1">비밀번호</label>
+                    <input type="password" id="loginPw" placeholder="비밀번호를 입력하세요" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                </div>
+                <div class="flex items-center gap-2 pt-1">
+                    <input type="checkbox" id="rememberMe" class="w-4 h-4 rounded bg-void-canvas border-slate accent-dusk-violet cursor-pointer">
+                    <label for="rememberMe" class="text-xs text-ash cursor-pointer select-none">자동 로그인 (이 브라우저에서 유지)</label>
+                </div>
+            </div>
+            <button onclick="processLogin()" class="w-full py-3 rounded-full bg-white text-black font-medium text-sm hover:bg-bone transition-all mb-3 shadow-lg">로그인</button>
+            <div class="text-center">
+                <span class="text-xs text-slate">계정이 없으신가요? </span>
+                <button onclick="switchToRegister()" class="text-xs text-dusk-violet hover:underline font-medium">회원가입 신청</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-graphite hairline-border rounded-[32px] max-w-md w-full p-8 relative shadow-2xl">
+            <button onclick="switchToLogin()" class="absolute top-6 right-6 text-ash hover:text-white p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <h3 class="font-geist font-semibold text-xl text-bone mb-2">신규 회원가입 신청</h3>
+            <p class="text-xs text-ash mb-6 font-kr">가입 신청 후 관리자의 승인이 완료되면 대시보드를 이용하실 수 있습니다.</p>
+            <div class="space-y-4 mb-6 font-kr">
+                <div>
+                    <label class="block text-xs text-ash mb-1">사용할 아이디</label>
+                    <input type="text" id="regId" placeholder="아이디 입력" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-ash mb-1">사용할 비밀번호</label>
+                    <input type="password" id="regPw" placeholder="비밀번호 입력" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-ash mb-1">이름 / 소속 기관</label>
+                    <input type="text" id="regName" placeholder="홍길동 / OO사회복지관" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                </div>
+            </div>
+            <button onclick="processRegister()" class="w-full py-3 rounded-full bg-dusk-violet text-white font-medium text-sm hover:opacity-90 transition-all mb-3">가입 신청하기</button>
+            <div class="text-center">
+                <span class="text-xs text-slate">이미 계정이 있으신가요? </span>
+                <button onclick="switchToLogin()" class="text-xs text-bone hover:underline font-medium">로그인하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Approval Modal -->
+    <div id="adminApprovalModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-graphite hairline-border rounded-[32px] max-w-2xl w-full p-8 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeAdminApprovalModal()" class="absolute top-6 right-6 text-ash hover:text-white p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <h3 class="font-geist font-semibold text-xl text-bone mb-6">회원 가입 승인 대기 목록</h3>
+            <div id="approvalListContainer" class="space-y-3 font-kr">
+                <!-- Pending users injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin News Management Modal -->
+    <div id="adminNewsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-graphite hairline-border rounded-[32px] max-w-xl w-full p-8 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeNewsAdminModal()" class="absolute top-6 right-6 text-ash hover:text-white p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <h3 class="font-geist font-semibold text-xl text-bone mb-2">실시간 복지 이슈 TOP 5 관리</h3>
+            <p class="text-xs text-ash mb-6 font-kr">뉴스 제목과 이동할 원문 웹사이트 링크(URL)를 입력하세요.</p>
+            <div id="newsEditContainer" class="space-y-4 mb-6 font-kr">
+                <!-- News inputs injected here -->
+            </div>
+            <button onclick="saveLiveNews()" class="w-full py-3 rounded-full bg-white text-black font-medium text-sm hover:bg-bone transition-all">뉴스 실시간 반영하기</button>
+        </div>
+    </div>
+
+    <!-- Admin Tool Registration Modal -->
+    <div id="adminModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-graphite hairline-border rounded-[32px] max-w-xl w-full p-8 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeAdminModal()" class="absolute top-6 right-6 text-ash hover:text-white p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <h3 class="font-geist font-semibold text-xl text-bone mb-6">새 실무 도구 등록</h3>
+            <div class="space-y-4 mb-6 font-kr">
+                <div>
+                    <label class="block text-xs text-ash mb-1">도구 이름</label>
+                    <input type="text" id="newTitle" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-ash mb-1">카테고리</label>
+                    <select id="newCategory" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                        <option value="행정·서류 업무">행정·서류 업무</option>
+                        <option value="회계 업무">회계 업무</option>
+                        <option value="홍보 및 디자인">홍보 및 디자인</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-ash mb-1">도구 설명</label>
+                    <textarea id="newDesc" rows="2" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-ash mb-1">실행 주소 (URL)</label>
+                    <input type="text" id="newUrl" placeholder="https://..." class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-ash mb-1">사용 방법 및 주의사항</label>
+                    <textarea id="newGuide" rows="3" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-ash mb-1">버전</label>
+                        <input type="text" id="newVersion" value="v1.0" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-ash mb-1">업데이트 날짜</label>
+                        <input type="date" id="newDate" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                    </div>
+                </div>
+            </div>
+            <button onclick="addNewTool()" class="w-full py-3 rounded-full bg-white text-black font-medium text-sm hover:bg-bone transition-all">도구 등록 완료</button>
+        </div>
+    </div>
+
+    <!-- Admin Tool Edit Modal -->
+    <div id="editModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-graphite hairline-border rounded-[32px] max-w-xl w-full p-8 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeEditModal()" class="absolute top-6 right-6 text-ash hover:text-white p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <h3 class="font-geist font-semibold text-xl text-bone mb-6">실무 도구 정보 수정</h3>
+            <input type="hidden" id="editId">
+            <div class="space-y-4 mb-6 font-kr">
+                <div>
+                    <label class="block text-xs text-ash mb-1">도구 이름</label>
+                    <input type="text" id="editTitle" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-ash mb-1">카테고리</label>
+                    <select id="editCategory" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                        <option value="행정·서류 업무">행정·서류 업무</option>
+                        <option value="회계 업무">회계 업무</option>
+                        <option value="홍보 및 디자인">홍보 및 디자인</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-ash mb-1">도구 설명</label>
+                    <textarea id="editDesc" rows="2" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-ash mb-1">실행 주소 (URL)</label>
+                    <input type="text" id="editUrl" placeholder="https://..." class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-ash mb-1">사용 방법 및 주의사항</label>
+                    <textarea id="editGuide" rows="3" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-ash mb-1">버전</label>
+                        <input type="text" id="editVersion" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-ash mb-1">업데이트 날짜</label>
+                        <input type="date" id="editDate" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
+                    </div>
+                </div>
+            </div>
+            <button onclick="updateTool()" class="w-full py-3 rounded-full bg-white text-black font-medium text-sm hover:bg-bone transition-all">수정 사항 저장</button>
+        </div>
+    </div>
+
+    <!-- Application Script with Supabase Integration -->
+    <script>
+        // Supabase Initialization
+        const SUPABASE_URL = 'https://esgdllfikkftpplurack.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_VogyRwM2Rwch2C7kWBDeuQ_eXgiX9D0';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let tools = [];
+        let liveWelfareNews = [];
+        let users = [];
+        
+        // 자동 로그인 체크 여부에 따라 세션 복원
+        let currentUser = JSON.parse(localStorage.getItem('welfare_current_user')) || null;
+
+        // Default Sample Data
+        const defaultTools = [
+            {
+                title: "초간단 사례관리 요약기",
+                category: "행정·서류 업무",
+                description: "기나긴 상담 기록과 개입 내용을 핵심 위주로 깔끔하게 요약해 주는 실무 도구입니다.",
+                url: "https://example.com/case-summary",
+                guide: "1. 상담 원문을 복사하여 붙여넣습니다.\n2. 요약 생성 버튼을 누릅니다.\n3. 결과 복사 후 기록지에 반영합니다.",
+                version: "v1.2",
+                date: "2026-06-01"
+            },
+            {
+                title: "종사자 초과근무 및 수당 계산기",
+                category: "회계 업무",
+                description: "사회복지시설 인건비 가이드라인에 맞춘 시간외 근무 수당 및 야간 수당 자동 산출기",
+                url: "https://example.com/salary-calc",
+                guide: "근무 시간과 직급을 입력하면 수당이 자동 계산됩니다.",
+                version: "v2.0",
+                date: "2026-05-15"
+            },
+            {
+                title: "기관 프로그램 카드뉴스 문구 생성기",
+                category: "홍보 및 디자인",
+                description: "복지관 프로그램 모집 및 행사 안내를 위한 SNS 카드뉴스 문구 기획 도구",
+                url: "https://example.com/cardnews",
+                guide: "프로그램 대상과 주요 혜택을 입력하면 카드뉴스 슬라이드별 문구가 생성됩니다.",
+                version: "v1.0",
+                date: "2026-04-20"
+            }
+        ];
+
+        const defaultWelfareNews = [
+            { rank: 1, title: "2026년 사회복지시설 종사자 인건비 가이드라인 확정", url: "https://search.naver.com/search.naver?query=사회복지시설+인건비+가이드라인" },
+            { rank: 2, title: "보건복지부, 고립·은둔 청년 일상회복 지원사업 확대", url: "https://search.naver.com/search.naver?query=고립은둔청년+지원사업" },
+            { rank: 3, title: "지자체 찾아가는 복지상담 서비스 디지털 전환 가속", url: "https://search.naver.com/search.naver?query=찾아가는+복지상담" },
+            { rank: 4, title: "치매안심센터 맞춤형 사례관리 AI 도입 성과 공유", url: "https://search.naver.com/search.naver?query=치매안심센터+사례관리" },
+            { rank: 5, title: "사회복지관 특화 프로그램 공모전 개최 안내", url: "https://search.naver.com/search.naver?query=사회복지관+프로그램+공모전" }
+        ];
+
+        // Fetch Data from Supabase on Load
+        async function loadDataFromSupabase() {
+            // 1. Load Tools
+            const { data: toolsData, error: toolsError } = await _supabase.from('tools').select('*');
+            if (!toolsError && toolsData && toolsData.length > 0) {
+                tools = toolsData;
+            } else if (!toolsError && toolsData && toolsData.length === 0) {
+                for (let t of defaultTools) {
+                    await _supabase.from('tools').insert([t]);
+                }
+                const { data: retryTools } = await _supabase.from('tools').select('*');
+                tools = retryTools || [];
+            }
+
+            // 2. Load News
+            const { data: newsData, error: newsError } = await _supabase.from('news').select('*').order('rank', { ascending: true });
+            if (!newsError && newsData && newsData.length > 0) {
+                liveWelfareNews = newsData;
+            } else if (!newsError && newsData && newsData.length === 0) {
+                for (let n of defaultWelfareNews) {
+                    await _supabase.from('news').insert([n]);
+                }
+                const { data: retryNews } = await _supabase.from('news').select('*').order('rank', { ascending: true });
+                liveWelfareNews = retryNews || [];
+            }
+
+            // 3. Load Users
+            const { data: usersData, error: usersError } = await _supabase.from('users').select('*');
+            if (!usersError && usersData) {
+                users = usersData;
+            }
+
+            renderLiveNews();
+            renderAuthBar();
+            renderTools();
+        }
+
+        // Render Live Welfare News Ticker
+        function renderLiveNews() {
+            const newsList = document.getElementById('liveNewsList');
+            newsList.innerHTML = '';
+            liveWelfareNews.forEach(news => {
+                const li = document.createElement('li');
+                li.className = "flex items-center justify-between py-1.5 border-b border-[#e5e5e5]/5 hover:bg-white/5 px-2 rounded-lg transition-colors cursor-pointer group";
+                
+                const targetUrl = news.url && news.url.trim() !== "" ? news.url : "https://search.naver.com/search.naver?query=" + encodeURIComponent(news.title);
+                
+                li.onclick = () => {
+                    window.open(targetUrl, '_blank');
+                };
+
+                li.innerHTML = `
+                    <div class="flex items-center gap-2.5 truncate">
+                        <span class="font-bold text-dusk-violet w-4 text-right flex-shrink-0">${news.rank}</span>
+                        <span class="text-bone truncate font-light group-hover:text-white transition-colors">${news.title}</span>
+                    </div>
+                    <span class="text-[10px] text-slate group-hover:text-dusk-violet transition-colors flex-shrink-0">이동 ↗</span>
+                `;
+                newsList.appendChild(li);
+            });
+        }
+
+        function renderAuthBar() {
+            const authBar = document.getElementById('authBar');
+            const adminActionButtons = document.getElementById('adminActionButtons');
+            const newsManageBtn = document.getElementById('newsManageBtn');
+            const loginModal = document.getElementById('loginModal');
+            const registerModal = document.getElementById('registerModal');
+
+            if (!currentUser) {
+                loginModal.classList.remove('hidden');
+                authBar.innerHTML = `<span class="text-amber-400">⚠️ 로그인이 필요합니다.</span>`;
+                adminActionButtons.classList.add('hidden');
+                newsManageBtn.classList.add('hidden');
+            } else if (currentUser.role === 'admin') {
+                loginModal.classList.add('hidden');
+                registerModal.classList.add('hidden');
+                authBar.innerHTML = `
+                    <span class="text-bone font-medium">👑 시스템 관리자 (admin)님 환영합니다.</span>
+                    <button onclick="logout()" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-bone transition-all">로그아웃</button>
+                `;
+                adminActionButtons.classList.remove('hidden');
+                newsManageBtn.classList.remove('hidden');
+            } else if (currentUser.status === 'pending') {
+                loginModal.classList.add('hidden');
+                registerModal.classList.add('hidden');
+                authBar.innerHTML = `
+                    <span class="text-amber-400">⏳ 승인 대기 중 (${currentUser.userid || currentUser.id}님)</span>
+                    <button onclick="logout()" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-bone transition-all">로그아웃</button>
+                `;
+                adminActionButtons.classList.add('hidden');
+                newsManageBtn.classList.add('hidden');
+            } else if (currentUser.status === 'approved') {
+                loginModal.classList.add('hidden');
+                registerModal.classList.add('hidden');
+                authBar.innerHTML = `
+                    <span class="text-emerald-400">✅ 승인된 사용자 (${currentUser.name || currentUser.userid}님)</span>
+                    <button onclick="logout()" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-bone transition-all">로그아웃</button>
+                `;
+                adminActionButtons.classList.add('hidden');
+                newsManageBtn.classList.add('hidden');
+            }
+        }
+
+        function renderTools(filter = '전체', searchKeyword = '') {
+            const grid = document.getElementById('toolsGrid');
+            grid.innerHTML = '';
+
+            if (!currentUser) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-20 text-center frosted-card rounded-[32px] p-8">
+                        <h3 class="text-lg font-semibold text-bone mb-2">로그인이 필요합니다</h3>
+                        <p class="text-xs text-ash">화면 중앙의 로그인 창을 통해 로그인 후 실무 도구를 확인하세요.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (currentUser && currentUser.status === 'pending') {
+                grid.innerHTML = `
+                    <div class="col-span-full py-20 text-center frosted-card rounded-[32px] p-8">
+                        <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-bone mb-2">관리자 승인 대기 중입니다</h3>
+                        <p class="text-xs text-ash max-w-md mx-auto leading-relaxed">현재 가입 승인 심사 중입니다. 관리자가 승인 완료 처리하면 모든 도구 목록과 상세 실행 링크를 이용하실 수 있습니다.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let filtered = tools.filter(tool => {
+                const descText = tool.description || tool.desc || '';
+                const matchCategory = (filter === '전체' || tool.category === filter);
+                const matchSearch = tool.title.toLowerCase().includes(searchKeyword.toLowerCase()) || 
+                                    descText.toLowerCase().includes(searchKeyword.toLowerCase());
+                return matchCategory && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-16 text-center text-slate">
+                        <p class="text-base mb-2">등록된 도구가 없거나 검색 결과가 없습니다.</p>
+                        <p class="text-xs text-ash/60">다른 검색어를 입력하시거나 카테고리를 변경해 보세요.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(tool => {
+                const card = document.createElement('div');
+                card.className = "frosted-card rounded-[24px] p-7 flex flex-col justify-between hover:border-dusk-violet/50 transition-all group";
+                
+                let adminButtons = '';
+                if (currentUser && currentUser.role === 'admin') {
+                    adminButtons = `
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="openEditModal(event, '${tool.id}')" class="text-[11px] text-bone hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1 rounded-full hairline-border transition-all">
+                                수정
+                            </button>
+                            <button onclick="deleteTool(event, '${tool.id}')" class="text-[11px] text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 px-3 py-1 rounded-full hairline-border transition-all">
+                                삭제
+                            </button>
+                        </div>
+                    `;
+                }
+
+                const descText = tool.description || tool.desc || '';
+
+                card.innerHTML = `
+                    <div class="cursor-pointer" onclick="showDetail('${tool.id}')">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-medium px-3 py-1 rounded-full bg-white/5 text-dusk-violet hairline-border">${tool.category}</span>
+                            <span class="text-xs text-slate">${tool.version || 'v1.0'}</span>
+                        </div>
+                        <h3 class="font-geist font-semibold text-lg text-bone mb-2 group-hover:text-white transition-colors">${tool.title}</h3>
+                        <p class="text-ash text-sm font-light leading-relaxed mb-6 font-kr line-clamp-2">${descText}</p>
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t border-[#e5e5e5]/10">
+                        <span class="text-xs text-slate">업데이트: ${tool.date || '-'}</span>
+                        <div class="flex items-center gap-2">
+                            ${adminButtons}
+                            <span onclick="showDetail('${tool.id}')" class="text-xs text-bone group-hover:translate-x-1 transition-transform flex items-center gap-1 font-medium cursor-pointer">
+                                실행 <span class="text-dusk-violet">→</span>
+                            </span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        async function deleteTool(event, id) {
+            event.stopPropagation();
+            if (confirm("정말 이 실무 도구를 삭제하시겠습니까?")) {
+                const { error } = await _supabase.from('tools').delete().eq('id', id);
+                if (!error) {
+                    tools = tools.filter(t => t.id != id);
+                    renderTools();
+                    alert("도구가 성공적으로 삭제되었습니다.");
+                } else {
+                    alert("삭제 중 오류가 발생했습니다.");
+                }
+            }
+        }
+
+        function openEditModal(event, id) {
+            event.stopPropagation();
+            const tool = tools.find(t => t.id == id);
+            if (!tool) return;
+
+            document.getElementById('editId').value = tool.id;
+            document.getElementById('editTitle').value = tool.title || '';
+            document.getElementById('editCategory').value = tool.category || '행정·서류 업무';
+            document.getElementById('editDesc').value = tool.description || tool.desc || '';
+            document.getElementById('editUrl').value = tool.url || '';
+            document.getElementById('editGuide').value = tool.guide || '';
+            document.getElementById('editVersion').value = tool.version || 'v1.0';
+            document.getElementById('editDate').value = tool.date || new Date().toISOString().split('T')[0];
+
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        async function updateTool() {
+            const id = document.getElementById('editId').value;
+            const title = document.getElementById('editTitle').value.trim();
+            const category = document.getElementById('editCategory').value;
+            const description = document.getElementById('editDesc').value.trim();
+            let url = document.getElementById('editUrl').value.trim();
+            const guide = document.getElementById('editGuide').value.trim();
+            const version = document.getElementById('editVersion').value.trim() || 'v1.0';
+            const date = document.getElementById('editDate').value || new Date().toISOString().split('T')[0];
+
+            if (!title || !description || !url) {
+                alert("도구 이름, 설명, 실행 주소는 필수 입력 사항입니다.");
+                return;
+            }
+
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+
+            const updatedData = {
+                title,
+                category,
+                description,
+                url,
+                guide: guide || "등록된 사용법이 없습니다.",
+                version,
+                date
+            };
+
+            const { error } = await _supabase.from('tools').update(updatedData).eq('id', id);
+            if (!error) {
+                const index = tools.findIndex(t => t.id == id);
+                if (index !== -1) {
+                    tools[index] = { id, ...updatedData };
+                }
+                renderTools();
+                closeEditModal();
+                alert("실무 도구 정보가 성공적으로 수정되었습니다!");
+            } else {
+                alert("수정 중 오류가 발생했습니다.");
+            }
+        }
+
+        function filterCategory(category) {
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if(btn.textContent.trim() === category || (category === '전체' && btn.textContent.includes('전체'))) {
+                    btn.className = "cat-btn px-5 py-2.5 rounded-full text-xs font-medium bg-white text-black transition-all";
+                } else {
+                    btn.className = "cat-btn px-5 py-2.5 rounded-full text-xs font-medium bg-graphite text-ash hover:text-bone hairline-border transition-all";
+                }
+            });
+            const keyword = document.getElementById('searchInput').value;
+            renderTools(category, keyword);
+        }
+
+        function handleSearch() {
+            const keyword = document.getElementById('searchInput').value;
+            const activeBtn = document.querySelector('.cat-btn.bg-white');
+            const currentCat = activeBtn ? activeBtn.textContent.trim() : '전체';
+            renderTools(currentCat, keyword);
+        }
+
+        document.getElementById('searchInput').addEventListener('keyup', () => {
+            handleSearch();
+        });
+
+        function showDetail(id) {
+            if (!currentUser || currentUser.status === 'pending') {
+                alert("로그인 또는 관리자 승인 후 이용할 수 있습니다.");
+                return;
+            }
+
+            const tool = tools.find(t => t.id == id);
+            if (!tool) return;
+
+            const descText = tool.description || tool.desc || '';
+
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = `
+                <div class="mb-4">
+                    <span class="text-xs font-medium px-3 py-1 rounded-full bg-white/5 text-dusk-violet hairline-border">${tool.category}</span>
+                </div>
+                <h2 class="font-geist font-semibold text-2xl text-bone mb-2">${tool.title}</h2>
+                <p class="text-ash text-sm mb-6 leading-relaxed font-kr">${descText}</p>
+                
+                <div class="bg-void-canvas hairline-border rounded-2xl p-4 mb-6 font-kr text-sm">
+                    <h4 class="text-xs font-semibold text-bone uppercase tracking-wider mb-2">사용 방법 및 주의사항</h4>
+                    <p class="text-ash whitespace-pre-line text-xs leading-relaxed">${tool.guide || '등록된 사용법이 없습니다.'}</p>
+                </div>
+
+                <div class="flex items-center justify-between text-xs text-slate mb-8">
+                    <span>버전: ${tool.version || 'v1.0'}</span>
+                    <span>마지막 업데이트: ${tool.date || '-'}</span>
+                </div>
+
+                <div class="flex gap-3">
+                    <a href="${tool.url}" target="_blank" rel="noopener noreferrer" class="flex-grow py-3 rounded-full bg-white text-black font-medium text-sm text-center hover:bg-bone transition-all flex items-center justify-center gap-2">
+                        <span>외부 웹사이트에서 실행</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </a>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        function openRegisterModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('registerModal').classList.remove('hidden');
+        }
+        function switchToRegister() { openRegisterModal(); }
+        function switchToLogin() {
+            document.getElementById('registerModal').classList.add('hidden');
+            document.getElementById('loginModal').classList.remove('hidden');
+        }
+
+        // 로그인 처리 (자동 로그인 체크박스 연동)
+        async function processLogin() {
+            const id = document.getElementById('loginId').value.trim();
+            const pw = document.getElementById('loginPw').value.trim();
+            const rememberMe = document.getElementById('rememberMe').checked;
+
+            if (!id || !pw) {
+                alert("아이디와 비밀번호를 모두 입력해주세요.");
+                return;
+            }
+
+            if (id === 'admin') {
+                if (pw === '1130') {
+                    currentUser = { id: 'admin', userid: 'admin', role: 'admin', status: 'approved' };
+                    if (rememberMe) {
+                        localStorage.setItem('welfare_current_user', JSON.stringify(currentUser));
+                    }
+                    renderAuthBar();
+                    renderTools();
+                    alert("관리자 계정으로 로그인되었습니다.");
+                    return;
+                } else {
+                    alert("비밀번호가 일치하지 않습니다.");
+                    return;
+                }
+            }
+
+            const found = users.find(u => (u.userid === id || u.id === id) && u.pw === pw);
+            if (found) {
+                currentUser = found;
+                if (rememberMe) {
+                    localStorage.setItem('welfare_current_user', JSON.stringify(currentUser));
+                }
+                renderAuthBar();
+                renderTools();
+                alert(`${found.name || found.userid}님 환영합니다.`);
+            } else {
+                alert("아이디 또는 비밀번호가 일치하지 않습니다.");
+            }
+        }
+
+        async function processRegister() {
+            const userid = document.getElementById('regId').value.trim();
+            const pw = document.getElementById('regPw').value.trim();
+            const name = document.getElementById('regName').value.trim();
+
+            if (!userid || !pw || !name) {
+                alert("모든 항목을 입력해주세요.");
+                return;
+            }
+
+            if (userid === 'admin') {
+                alert("사용할 수 없는 아이디입니다.");
+                return;
+            }
+
+            if (users.some(u => u.userid === userid || u.id === userid)) {
+                alert("이미 존재하는 아이디입니다.");
+                return;
+            }
+
+            const newUser = {
+                userid,
+                pw,
+                name,
+                role: 'user',
+                status: 'pending',
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            const { data, error } = await _supabase.from('users').insert([newUser]).select();
+            if (!error) {
+                users.push(newUser);
+                currentUser = newUser;
+                renderAuthBar();
+                renderTools();
+                alert("회원가입 신청이 완료되었습니다. 관리자 승인 후 이용 가능합니다.");
+            } else {
+                alert("가입 중 오류가 발생했습니다.");
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('welfare_current_user');
+            renderAuthBar();
+            renderTools();
+            alert("로그아웃 되었습니다.");
+            location.reload(); // 새로고침하여 안전하게 로그인 창 복원
+        }
+
+        function openAdminApprovalModal() {
+            const container = document.getElementById('approvalListContainer');
+            container.innerHTML = '';
+
+            const pendingUsers = users.filter(u => u.status === 'pending');
+
+            if (pendingUsers.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate py-8 text-center">승인 대기 중인 사용자가 없습니다.</p>`;
+            } else {
+                pendingUsers.forEach(u => {
+                    const row = document.createElement('div');
+                    row.className = "flex items-center justify-between p-4 bg-void-canvas hairline-border rounded-2xl";
+                    row.innerHTML = `
+                        <div>
+                            <p class="text-sm font-medium text-bone">${u.name} <span class="text-xs text-slate">(${u.userid || u.id})</span></p>
+                            <p class="text-xs text-ash/60">신청일: ${u.date || '-'}</p>
+                        </div>
+                        <button onclick="approveUser('${u.userid || u.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-medium transition-all">승인하기</button>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+
+            document.getElementById('adminApprovalModal').classList.remove('hidden');
+        }
+
+        function closeAdminApprovalModal() {
+            document.getElementById('adminApprovalModal').classList.add('hidden');
+        }
+
+        async function approveUser(userId) {
+            const target = users.find(u => (u.userid === userId || u.id === userId));
+            if (target) {
+                const { error } = await _supabase.from('users').update({ status: 'approved' }).eq('userid', userId);
+                if (!error) {
+                    target.status = 'approved';
+                    openAdminApprovalModal();
+                    alert(`${target.name}님의 가입이 승인되었습니다.`);
+                    if (currentUser && (currentUser.userid === userId || currentUser.id === userId)) {
+                        currentUser.status = 'approved';
+                        localStorage.setItem('welfare_current_user', JSON.stringify(currentUser));
+                        renderAuthBar();
+                        renderTools();
+                    }
+                } else {
+                    alert("승인 처리 중 오류가 발생했습니다.");
+                }
+            }
+        }
+
+        function openNewsAdminModal() {
+            const container = document.getElementById('newsEditContainer');
+            container.innerHTML = '';
+
+            liveWelfareNews.forEach((news, index) => {
+                const div = document.createElement('div');
+                div.className = "p-4 bg-void-canvas hairline-border rounded-2xl space-y-2";
+                div.innerHTML = `
+                    <span class="text-xs font-bold text-dusk-violet">${news.rank}위 뉴스 설정</span>
+                    <div>
+                        <label class="block text-[11px] text-ash mb-1">기사 제목</label>
+                        <input type="text" id="newsTitleInput_${index}" value="${news.title}" class="w-full bg-graphite hairline-border rounded-xl px-3 py-2 text-xs text-bone focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-ash mb-1">원문 링크 (URL)</label>
+                        <input type="text" id="newsUrlInput_${index}" value="${news.url || ''}" placeholder="https://..." class="w-full bg-graphite hairline-border rounded-xl px-3 py-2 text-xs text-bone focus:outline-none">
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('adminNewsModal').classList.remove('hidden');
+        }
+
+        function closeNewsAdminModal() {
+            document.getElementById('adminNewsModal').classList.add('hidden');
+        }
+
+        async function saveLiveNews() {
+            for (let i = 0; i < liveWelfareNews.length; i++) {
+                const titleVal = document.getElementById(`newsTitleInput_${i}`).value.trim();
+                let urlVal = document.getElementById(`newsUrlInput_${i}`).value.trim();
+                
+                if (urlVal && !urlVal.startsWith('http://') && !urlVal.startsWith('https://')) {
+                    urlVal = 'https://' + urlVal;
+                }
+
+                if (titleVal) {
+                    liveWelfareNews[i].title = titleVal;
+                    liveWelfareNews[i].url = urlVal;
+                    
+                    if (liveWelfareNews[i].id) {
+                        await _supabase.from('news').update({ title: titleVal, url: urlVal }).eq('id', liveWelfareNews[i].id);
+                    }
+                }
+            }
+            renderLiveNews();
+            closeNewsAdminModal();
+            alert("실시간 복지 이슈 및 연결 링크가 클라우드에 성공적으로 반영되었습니다!");
+        }
+
+        function openAdminModal() {
+            document.getElementById('adminModal').classList.remove('hidden');
+            document.getElementById('newDate').valueAsDate = new Date();
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.add('hidden');
+        }
+
+        async function addNewTool() {
+            const title = document.getElementById('newTitle').value.trim();
+            const category = document.getElementById('newCategory').value;
+            const description = document.getElementById('newDesc').value.trim();
+            let url = document.getElementById('newUrl').value.trim();
+            const guide = document.getElementById('newGuide').value.trim();
+            const version = document.getElementById('newVersion').value.trim() || 'v1.0';
+            const date = document.getElementById('newDate').value || new Date().toISOString().split('T')[0];
+
+            if (!title || !description || !url) {
+                alert("도구 이름, 설명, 실행 주소는 필수 입력 사항입니다.");
+                return;
+            }
+
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+
+            const newTool = {
+                title,
+                category,
+                description,
+                url,
+                guide: guide || "등록된 사용법이 없습니다.",
+                version,
+                date
+            };
+
+            const { data, error } = await _supabase.from('tools').insert([newTool]).select();
+            if (!error && data) {
+                tools.unshift(data[0]);
+                renderTools();
+                closeAdminModal();
+
+                document.getElementById('newTitle').value = '';
+                document.getElementById('newDesc').value = '';
+                document.getElementById('newUrl').value = '';
+                document.getElementById('newGuide').value = '';
+                alert("새로운 도구가 클라우드에 성공적으로 등록되었습니다!");
+            } else {
+                alert("도구 등록 중 오류가 발생했습니다.");
+            }
+        }
+
+        // Initialize App on load by fetching from Supabase
+        loadDataFromSupabase();
+    </script>
+</body>
+</html>
