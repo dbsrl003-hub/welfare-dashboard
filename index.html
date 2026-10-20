@@ -55,14 +55,14 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between selection:bg-white selection:text-black">
 
-    <!-- Top Status Banner & Auth Info -->
+    <!-- Top Status Banner & Admin Login -->
     <div class="w-full py-2.5 px-6 bg-[#161616] border-b border-[#e5e5e5]/10 text-xs tracking-wide text-ash flex items-center justify-between">
         <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-dusk-violet animate-pulse"></span>
-            <span>사회복지 현장 맞춤형 바이브코딩 도구 디렉터리 v2.1 (Cloud DB)</span>
+            <span>사회복지 현장 맞춤형 바이브코딩 도구 디렉터리 v2.2 (Cloud DB)</span>
         </div>
         <div id="authBar" class="flex items-center gap-3">
-            <!-- Dynamic Auth Status -->
+            <!-- Dynamic Admin Status -->
         </div>
     </div>
 
@@ -140,13 +140,9 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <h2 class="font-geist font-semibold text-2xl text-bone tracking-tight">등록된 실무 도구 목록</h2>
                 <div id="adminActionButtons" class="flex items-center gap-2 hidden">
-                    <button onclick="openAdminApprovalModal()" class="text-xs text-bone hover:text-white bg-dusk-violet/30 hairline-border px-4 py-2 rounded-full transition-all flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                        <span>회원 가입 승인 관리</span>
-                    </button>
                     <button onclick="openAdminModal()" class="text-xs text-bone hover:text-white bg-white/10 hairline-border px-4 py-2 rounded-full transition-all flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span>도구 등록하기</span>
+                        <span>새 도구 등록하기</span>
                     </button>
                 </div>
             </div>
@@ -176,14 +172,17 @@
         </div>
     </div>
 
-    <!-- Login Modal (자동 로그인 체크박스 추가) -->
-    <div id="loginModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <!-- Admin Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-graphite hairline-border rounded-[32px] max-w-md w-full p-8 relative shadow-2xl">
-            <h3 class="font-geist font-semibold text-2xl text-bone mb-2">시스템 로그인</h3>
-            <p class="text-xs text-ash mb-6 font-kr">대시보드를 이용하려면 로그인을 진행해주세요.</p>
+            <button onclick="closeLoginModal()" class="absolute top-6 right-6 text-ash hover:text-white p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <h3 class="font-geist font-semibold text-2xl text-bone mb-2">관리자 로그인</h3>
+            <p class="text-xs text-ash mb-6 font-kr">도구를 등록, 수정, 삭제하려면 관리자 인증이 필요합니다.</p>
             <div class="space-y-4 mb-4 font-kr">
                 <div>
-                    <label class="block text-xs text-ash mb-1">아이디</label>
+                    <label class="block text-xs text-ash mb-1">관리자 아이디</label>
                     <input type="text" id="loginId" placeholder="아이디를 입력하세요" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
                 </div>
                 <div>
@@ -192,57 +191,10 @@
                 </div>
                 <div class="flex items-center gap-2 pt-1">
                     <input type="checkbox" id="rememberMe" class="w-4 h-4 rounded bg-void-canvas border-slate accent-dusk-violet cursor-pointer">
-                    <label for="rememberMe" class="text-xs text-ash cursor-pointer select-none">자동 로그인 (이 브라우저에서 유지)</label>
+                    <label for="rememberMe" class="text-xs text-ash cursor-pointer select-none">관리자 자동 로그인 유지</label>
                 </div>
             </div>
             <button onclick="processLogin()" class="w-full py-3 rounded-full bg-white text-black font-medium text-sm hover:bg-bone transition-all mb-3 shadow-lg">로그인</button>
-            <div class="text-center">
-                <span class="text-xs text-slate">계정이 없으신가요? </span>
-                <button onclick="switchToRegister()" class="text-xs text-dusk-violet hover:underline font-medium">회원가입 신청</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Register Modal -->
-    <div id="registerModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-graphite hairline-border rounded-[32px] max-w-md w-full p-8 relative shadow-2xl">
-            <button onclick="switchToLogin()" class="absolute top-6 right-6 text-ash hover:text-white p-2">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-            <h3 class="font-geist font-semibold text-xl text-bone mb-2">신규 회원가입 신청</h3>
-            <p class="text-xs text-ash mb-6 font-kr">가입 신청 후 관리자의 승인이 완료되면 대시보드를 이용하실 수 있습니다.</p>
-            <div class="space-y-4 mb-6 font-kr">
-                <div>
-                    <label class="block text-xs text-ash mb-1">사용할 아이디</label>
-                    <input type="text" id="regId" placeholder="아이디 입력" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs text-ash mb-1">사용할 비밀번호</label>
-                    <input type="password" id="regPw" placeholder="비밀번호 입력" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs text-ash mb-1">이름 / 소속 기관</label>
-                    <input type="text" id="regName" placeholder="홍길동 / OO사회복지관" class="w-full bg-void-canvas hairline-border rounded-xl px-4 py-2.5 text-sm text-bone focus:outline-none">
-                </div>
-            </div>
-            <button onclick="processRegister()" class="w-full py-3 rounded-full bg-dusk-violet text-white font-medium text-sm hover:opacity-90 transition-all mb-3">가입 신청하기</button>
-            <div class="text-center">
-                <span class="text-xs text-slate">이미 계정이 있으신가요? </span>
-                <button onclick="switchToLogin()" class="text-xs text-bone hover:underline font-medium">로그인하기</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Admin Approval Modal -->
-    <div id="adminApprovalModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-graphite hairline-border rounded-[32px] max-w-2xl w-full p-8 relative max-h-[90vh] overflow-y-auto">
-            <button onclick="closeAdminApprovalModal()" class="absolute top-6 right-6 text-ash hover:text-white p-2">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-            <h3 class="font-geist font-semibold text-xl text-bone mb-6">회원 가입 승인 대기 목록</h3>
-            <div id="approvalListContainer" class="space-y-3 font-kr">
-                <!-- Pending users injected here -->
-            </div>
         </div>
     </div>
 
@@ -365,10 +317,7 @@
 
         let tools = [];
         let liveWelfareNews = [];
-        let users = [];
-        
-        // 자동 로그인 체크 여부에 따라 세션 복원
-        let currentUser = JSON.parse(localStorage.getItem('welfare_current_user')) || null;
+        let isAdmin = localStorage.getItem('welfare_is_admin') === 'true';
 
         // Default Sample Data
         const defaultTools = [
@@ -435,12 +384,6 @@
                 liveWelfareNews = retryNews || [];
             }
 
-            // 3. Load Users
-            const { data: usersData, error: usersError } = await _supabase.from('users').select('*');
-            if (!usersError && usersData) {
-                users = usersData;
-            }
-
             renderLiveNews();
             renderAuthBar();
             renderTools();
@@ -475,38 +418,17 @@
             const authBar = document.getElementById('authBar');
             const adminActionButtons = document.getElementById('adminActionButtons');
             const newsManageBtn = document.getElementById('newsManageBtn');
-            const loginModal = document.getElementById('loginModal');
-            const registerModal = document.getElementById('registerModal');
 
-            if (!currentUser) {
-                loginModal.classList.remove('hidden');
-                authBar.innerHTML = `<span class="text-amber-400">⚠️ 로그인이 필요합니다.</span>`;
-                adminActionButtons.classList.add('hidden');
-                newsManageBtn.classList.add('hidden');
-            } else if (currentUser.role === 'admin') {
-                loginModal.classList.add('hidden');
-                registerModal.classList.add('hidden');
+            if (isAdmin) {
                 authBar.innerHTML = `
-                    <span class="text-bone font-medium">👑 시스템 관리자 (admin)님 환영합니다.</span>
-                    <button onclick="logout()" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-bone transition-all">로그아웃</button>
+                    <span class="text-bone font-medium">👑 관리자 로그인됨</span>
+                    <button onclick="logoutAdmin()" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-bone transition-all">로그아웃</button>
                 `;
                 adminActionButtons.classList.remove('hidden');
                 newsManageBtn.classList.remove('hidden');
-            } else if (currentUser.status === 'pending') {
-                loginModal.classList.add('hidden');
-                registerModal.classList.add('hidden');
+            } else {
                 authBar.innerHTML = `
-                    <span class="text-amber-400">⏳ 승인 대기 중 (${currentUser.userid || currentUser.id}님)</span>
-                    <button onclick="logout()" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-bone transition-all">로그아웃</button>
-                `;
-                adminActionButtons.classList.add('hidden');
-                newsManageBtn.classList.add('hidden');
-            } else if (currentUser.status === 'approved') {
-                loginModal.classList.add('hidden');
-                registerModal.classList.add('hidden');
-                authBar.innerHTML = `
-                    <span class="text-emerald-400">✅ 승인된 사용자 (${currentUser.name || currentUser.userid}님)</span>
-                    <button onclick="logout()" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-bone transition-all">로그아웃</button>
+                    <button onclick="openLoginModal()" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-bone transition-all">관리자 로그인</button>
                 `;
                 adminActionButtons.classList.add('hidden');
                 newsManageBtn.classList.add('hidden');
@@ -516,29 +438,6 @@
         function renderTools(filter = '전체', searchKeyword = '') {
             const grid = document.getElementById('toolsGrid');
             grid.innerHTML = '';
-
-            if (!currentUser) {
-                grid.innerHTML = `
-                    <div class="col-span-full py-20 text-center frosted-card rounded-[32px] p-8">
-                        <h3 class="text-lg font-semibold text-bone mb-2">로그인이 필요합니다</h3>
-                        <p class="text-xs text-ash">화면 중앙의 로그인 창을 통해 로그인 후 실무 도구를 확인하세요.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            if (currentUser && currentUser.status === 'pending') {
-                grid.innerHTML = `
-                    <div class="col-span-full py-20 text-center frosted-card rounded-[32px] p-8">
-                        <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                        </div>
-                        <h3 class="text-lg font-semibold text-bone mb-2">관리자 승인 대기 중입니다</h3>
-                        <p class="text-xs text-ash max-w-md mx-auto leading-relaxed">현재 가입 승인 심사 중입니다. 관리자가 승인 완료 처리하면 모든 도구 목록과 상세 실행 링크를 이용하실 수 있습니다.</p>
-                    </div>
-                `;
-                return;
-            }
 
             let filtered = tools.filter(tool => {
                 const descText = tool.description || tool.desc || '';
@@ -563,7 +462,7 @@
                 card.className = "frosted-card rounded-[24px] p-7 flex flex-col justify-between hover:border-dusk-violet/50 transition-all group";
                 
                 let adminButtons = '';
-                if (currentUser && currentUser.role === 'admin') {
+                if (isAdmin) {
                     adminButtons = `
                         <div class="flex items-center gap-1.5">
                             <button onclick="openEditModal(event, '${tool.id}')" class="text-[11px] text-bone hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1 rounded-full hairline-border transition-all">
@@ -603,6 +502,10 @@
 
         async function deleteTool(event, id) {
             event.stopPropagation();
+            if (!isAdmin) {
+                alert("관리자 권한이 필요합니다.");
+                return;
+            }
             if (confirm("정말 이 실무 도구를 삭제하시겠습니까?")) {
                 const { error } = await _supabase.from('tools').delete().eq('id', id);
                 if (!error) {
@@ -617,6 +520,10 @@
 
         function openEditModal(event, id) {
             event.stopPropagation();
+            if (!isAdmin) {
+                alert("관리자 권한이 필요합니다.");
+                return;
+            }
             const tool = tools.find(t => t.id == id);
             if (!tool) return;
 
@@ -637,6 +544,8 @@
         }
 
         async function updateTool() {
+            if (!isAdmin) return;
+
             const id = document.getElementById('editId').value;
             const title = document.getElementById('editTitle').value.trim();
             const category = document.getElementById('editCategory').value;
@@ -703,11 +612,6 @@
         });
 
         function showDetail(id) {
-            if (!currentUser || currentUser.status === 'pending') {
-                alert("로그인 또는 관리자 승인 후 이용할 수 있습니다.");
-                return;
-            }
-
             const tool = tools.find(t => t.id == id);
             if (!tool) return;
 
@@ -745,158 +649,49 @@
             document.getElementById('detailModal').classList.add('hidden');
         }
 
-        function openRegisterModal() {
-            document.getElementById('loginModal').classList.add('hidden');
-            document.getElementById('registerModal').classList.remove('hidden');
-        }
-        function switchToRegister() { openRegisterModal(); }
-        function switchToLogin() {
-            document.getElementById('registerModal').classList.add('hidden');
+        function openLoginModal() {
             document.getElementById('loginModal').classList.remove('hidden');
         }
 
-        // 로그인 처리 (자동 로그인 체크박스 연동)
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+        }
+
+        // 관리자 전용 로그인 처리
         async function processLogin() {
             const id = document.getElementById('loginId').value.trim();
             const pw = document.getElementById('loginPw').value.trim();
             const rememberMe = document.getElementById('rememberMe').checked;
 
             if (!id || !pw) {
-                alert("아이디와 비밀번호를 모두 입력해주세요.");
+                alert("관리자 아이디와 비밀번호를 모두 입력해주세요.");
                 return;
             }
 
-            if (id === 'admin') {
-                if (pw === '1130') {
-                    currentUser = { id: 'admin', userid: 'admin', role: 'admin', status: 'approved' };
-                    if (rememberMe) {
-                        localStorage.setItem('welfare_current_user', JSON.stringify(currentUser));
-                    }
-                    renderAuthBar();
-                    renderTools();
-                    alert("관리자 계정으로 로그인되었습니다.");
-                    return;
-                } else {
-                    alert("비밀번호가 일치하지 않습니다.");
-                    return;
-                }
-            }
-
-            const found = users.find(u => (u.userid === id || u.id === id) && u.pw === pw);
-            if (found) {
-                currentUser = found;
+            if (id === 'admin' && pw === '1130') {
+                isAdmin = true;
                 if (rememberMe) {
-                    localStorage.setItem('welfare_current_user', JSON.stringify(currentUser));
+                    localStorage.setItem('welfare_is_admin', 'true');
                 }
+                closeLoginModal();
                 renderAuthBar();
                 renderTools();
-                alert(`${found.name || found.userid}님 환영합니다.`);
+                alert("관리자 권한이 인증되었습니다.");
             } else {
-                alert("아이디 또는 비밀번호가 일치하지 않습니다.");
+                alert("관리자 계정 정보가 올바르지 않습니다.");
             }
         }
 
-        async function processRegister() {
-            const userid = document.getElementById('regId').value.trim();
-            const pw = document.getElementById('regPw').value.trim();
-            const name = document.getElementById('regName').value.trim();
-
-            if (!userid || !pw || !name) {
-                alert("모든 항목을 입력해주세요.");
-                return;
-            }
-
-            if (userid === 'admin') {
-                alert("사용할 수 없는 아이디입니다.");
-                return;
-            }
-
-            if (users.some(u => u.userid === userid || u.id === userid)) {
-                alert("이미 존재하는 아이디입니다.");
-                return;
-            }
-
-            const newUser = {
-                userid,
-                pw,
-                name,
-                role: 'user',
-                status: 'pending',
-                date: new Date().toISOString().split('T')[0]
-            };
-
-            const { data, error } = await _supabase.from('users').insert([newUser]).select();
-            if (!error) {
-                users.push(newUser);
-                currentUser = newUser;
-                renderAuthBar();
-                renderTools();
-                alert("회원가입 신청이 완료되었습니다. 관리자 승인 후 이용 가능합니다.");
-            } else {
-                alert("가입 중 오류가 발생했습니다.");
-            }
-        }
-
-        function logout() {
-            currentUser = null;
-            localStorage.removeItem('welfare_current_user');
+        function logoutAdmin() {
+            isAdmin = false;
+            localStorage.removeItem('welfare_is_admin');
             renderAuthBar();
             renderTools();
-            alert("로그아웃 되었습니다.");
-            location.reload(); // 새로고침하여 안전하게 로그인 창 복원
-        }
-
-        function openAdminApprovalModal() {
-            const container = document.getElementById('approvalListContainer');
-            container.innerHTML = '';
-
-            const pendingUsers = users.filter(u => u.status === 'pending');
-
-            if (pendingUsers.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate py-8 text-center">승인 대기 중인 사용자가 없습니다.</p>`;
-            } else {
-                pendingUsers.forEach(u => {
-                    const row = document.createElement('div');
-                    row.className = "flex items-center justify-between p-4 bg-void-canvas hairline-border rounded-2xl";
-                    row.innerHTML = `
-                        <div>
-                            <p class="text-sm font-medium text-bone">${u.name} <span class="text-xs text-slate">(${u.userid || u.id})</span></p>
-                            <p class="text-xs text-ash/60">신청일: ${u.date || '-'}</p>
-                        </div>
-                        <button onclick="approveUser('${u.userid || u.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-medium transition-all">승인하기</button>
-                    `;
-                    container.appendChild(row);
-                });
-            }
-
-            document.getElementById('adminApprovalModal').classList.remove('hidden');
-        }
-
-        function closeAdminApprovalModal() {
-            document.getElementById('adminApprovalModal').classList.add('hidden');
-        }
-
-        async function approveUser(userId) {
-            const target = users.find(u => (u.userid === userId || u.id === userId));
-            if (target) {
-                const { error } = await _supabase.from('users').update({ status: 'approved' }).eq('userid', userId);
-                if (!error) {
-                    target.status = 'approved';
-                    openAdminApprovalModal();
-                    alert(`${target.name}님의 가입이 승인되었습니다.`);
-                    if (currentUser && (currentUser.userid === userId || currentUser.id === userId)) {
-                        currentUser.status = 'approved';
-                        localStorage.setItem('welfare_current_user', JSON.stringify(currentUser));
-                        renderAuthBar();
-                        renderTools();
-                    }
-                } else {
-                    alert("승인 처리 중 오류가 발생했습니다.");
-                }
-            }
+            alert("관리자 모드에서 로그아웃 되었습니다.");
         }
 
         function openNewsAdminModal() {
+            if (!isAdmin) return;
             const container = document.getElementById('newsEditContainer');
             container.innerHTML = '';
 
@@ -925,6 +720,7 @@
         }
 
         async function saveLiveNews() {
+            if (!isAdmin) return;
             for (let i = 0; i < liveWelfareNews.length; i++) {
                 const titleVal = document.getElementById(`newsTitleInput_${i}`).value.trim();
                 let urlVal = document.getElementById(`newsUrlInput_${i}`).value.trim();
@@ -944,10 +740,14 @@
             }
             renderLiveNews();
             closeNewsAdminModal();
-            alert("실시간 복지 이슈 및 연결 링크가 클라우드에 성공적으로 반영되었습니다!");
+            alert("실시간 복지 이슈 및 연결 링크가 성공적으로 반영되었습니다!");
         }
 
         function openAdminModal() {
+            if (!isAdmin) {
+                alert("관리자 권한이 필요합니다.");
+                return;
+            }
             document.getElementById('adminModal').classList.remove('hidden');
             document.getElementById('newDate').valueAsDate = new Date();
         }
@@ -957,6 +757,8 @@
         }
 
         async function addNewTool() {
+            if (!isAdmin) return;
+
             const title = document.getElementById('newTitle').value.trim();
             const category = document.getElementById('newCategory').value;
             const description = document.getElementById('newDesc').value.trim();
